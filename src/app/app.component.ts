@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { CurrencyService, ICurencyList } from './services/currency.service';
 
 @Component({
@@ -15,67 +15,19 @@ export class AppComponent implements OnInit {
     firstSelect: new FormControl(),
     secondSelect: new FormControl(),
   });
+
   public isLoading: boolean = true;
-
-  ngOnInit() {
-    // const inputs = ['firstInput', 'secondInput'];
-    // const selects = ['firstSelect', 'secondSelect'];
-
-    // for(let input of inputs) {
-      
-    // }
-
-    this.currencyForm
-      .get('firstInput')
-      ?.valueChanges.subscribe((value: number) => {
-        const anotherValue = this.getCurrencyValue(value, 2).toFixed(2);
-        this.currencyForm.patchValue(
-          { secondInput: anotherValue ?? 0 },
-          { emitEvent: false, onlySelf: true }
-        );
-      });
-
-    this.currencyForm
-      .get('secondInput')
-      ?.valueChanges.subscribe((value: number) => {
-        const anotherValue = this.getCurrencyValue(value, 1).toFixed(2);
-        this.currencyForm.patchValue(
-          { firstInput: anotherValue ?? 0 },
-          { emitEvent: false, onlySelf: true }
-        );
-      });
-    this.currencyForm
-      .get('firstSelect')
-      ?.valueChanges.subscribe((value: string) => {
-        this.currentState[0] = value;
-        this.currencyForm.patchValue(
-          { firstInput: this.currencyForm.get('firstInput')?.value },
-          { emitEvent: true, onlySelf: true }
-        );
-      });
-
-    this.currencyForm
-      .get('secondSelect')
-      ?.valueChanges.subscribe((value: string) => {
-        this.currentState[1] = value;
-
-        this.currencyForm.patchValue(
-          { secondInput: this.currencyForm.get('secondInput')?.value },
-          { emitEvent: true, onlySelf: true }
-        );
-      });
-  }
-
-  public arrowRotated = false;
-
-  public currencyList: ICurencyList = {
-    base: 'EUR',
-    rates: {},
-  };
 
   private base = 'EUR';
 
+  public currencyList: ICurencyList = {
+    base: this.base,
+    rates: {},
+  };
+
   public currentState: [string, string] = ['USD', 'RUB'];
+
+  public arrowRotated = false;
 
   constructor(private _currency: CurrencyService) {
     forkJoin([
@@ -83,13 +35,13 @@ export class AppComponent implements OnInit {
       this._currency.getLocalCurrency(),
     ]).subscribe(([currencyList, localCurrency]) => {
       const predefinedCurrencies = ['USD', 'EUR', 'RUB'];
-      
+
       // fill values
       this.currentState[0] = localCurrency;
       this.currencyList = currencyList;
       this.isLoading = false;
 
-      // try not to repeat currencies for first time
+      // not to repeat currencies when initializing
       if (this.currentState[0] == this.currentState[1]) {
         for (let c of predefinedCurrencies) {
           if (this.currentState[0] !== c) {
@@ -98,6 +50,60 @@ export class AppComponent implements OnInit {
           }
         }
       }
+    });
+  }
+
+  private serviceVariables = {
+    inputs: ['firstInput', 'secondInput'],
+    selects: ['firstSelect', 'secondSelect'],
+  }
+
+  private _updateInput(i: number) {
+    // just emit event for input
+
+    const itsValue = this.currencyForm.get(this.serviceVariables.inputs[i])?.value;
+    this.currencyForm.get(this.serviceVariables.inputs[i])?.setValue(itsValue, {
+      emitEvent: true,
+      onlySelf: true,
+    });
+  }
+
+  ngOnInit() {
+    const clearAllIfEmptyOne = (value: number | null) => {
+      if (value === null) {
+        this.serviceVariables.inputs.forEach((input) => {
+          this.currencyForm
+            .get(input)
+            ?.setValue(null, { emitEvent: false, onlySelf: true });
+        });
+      }
+    };
+
+    // create subscriptions for inputs
+    this.serviceVariables.inputs.forEach((input, i) => {
+      this.currencyForm
+        .get(input)
+        ?.valueChanges.subscribe((value: number | null) => {
+          const anotherValue = this.getCurrencyValue(
+            value ?? 0,
+            i === 0 ? 2 : 1
+          ).toFixed(2);
+          const anotherInput = this.serviceVariables.inputs[i === 0 ? 1 : 0];
+
+          this.currencyForm
+            .get(anotherInput)
+            ?.setValue(anotherValue, { emitEvent: false, onlySelf: true });
+
+          clearAllIfEmptyOne(value);
+        });
+    });
+
+    // create subscriptions for selects
+    this.serviceVariables.selects.forEach((select, i) => {
+      this.currencyForm.get(select)?.valueChanges.subscribe((value: string) => {
+        this.currentState[i] = value;
+        this._updateInput(i);
+      });
     });
   }
 
@@ -121,9 +127,6 @@ export class AppComponent implements OnInit {
     this.currentState[0] = this.currentState[1];
     this.currentState[1] = temp;
 
-    this.currencyForm.patchValue(
-      { firstInput: this.currencyForm.get('firstInput')?.value },
-      { emitEvent: true, onlySelf: true }
-    );
+    this._updateInput(0);
   }
 }
