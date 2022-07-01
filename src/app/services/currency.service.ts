@@ -29,7 +29,7 @@ export class CurrencyService {
   }
 
   public getLocalCurrency() {
-    return this._http.get<{country_code: string}>('http://api.ipapi.com/api/check?fields=country_code&access_key=7a7ba612ca20b02516d47a097bf353b6')
+    return this._http.get<{country_code: string}>('https://api.ipdata.co/?fields=country_code&api-key=937473b2f37177ec75cc6f140c30b8f4572d45bd9a70666df62c1c75')
     .pipe(map((response) => response.country_code))
     .pipe(map((countryCode) => currencies[countryCode] ?? 'USD'))
   }
