@@ -73,7 +73,6 @@ export class AppComponent implements OnInit {
       for (let [i, input] of this.serviceVariables.inputs.entries()) {
         const formInput = this.currencyForm.get(input);  
         if(formInput?.value === null) {
-          console.log(formInput.value, input)
           this.currencyForm.get(this.serviceVariables.inputs[(i+1)%2])?.setValue(null, { emitEvent: false, onlySelf: true });
           return;
         }
