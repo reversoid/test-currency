@@ -69,13 +69,14 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
-    const clearAllIfEmptyOne = (value: number | null) => {
-      if (value === null) {
-        this.serviceVariables.inputs.forEach((input) => {
-          this.currencyForm
-            .get(input)
-            ?.setValue(null, { emitEvent: false, onlySelf: true });
-        });
+    const clearAllIfEmptyOne = () => {
+      for (let [i, input] of this.serviceVariables.inputs.entries()) {
+        const formInput = this.currencyForm.get(input);  
+        if(formInput?.value === null) {
+          console.log(formInput.value, input)
+          this.currencyForm.get(this.serviceVariables.inputs[(i+1)%2])?.setValue(null, { emitEvent: false, onlySelf: true });
+          return;
+        }
       }
     };
 
@@ -94,7 +95,7 @@ export class AppComponent implements OnInit {
             .get(anotherInput)
             ?.setValue(anotherValue, { emitEvent: false, onlySelf: true });
 
-          clearAllIfEmptyOne(value);
+          clearAllIfEmptyOne();
         });
     });
 
