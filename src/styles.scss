@@ -1,1 +1,37 @@
 /* You can add global styles to this file, and also import other style files */
+@import './reset.scss';
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap');
+
+html, body {
+    font-family: 'Roboto Mono', monospace;
+    background-color: #0a0e0e;
+    color: white;
+}
+
+.wrapper {
+    max-width: 1300px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px 80px;
+
+    @media screen and (max-width: 1000px){
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+    @media screen and (max-width: 400px){
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+// arrows of numeric input
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
